@@ -1,0 +1,25 @@
+name: helm-chart.yaml
+
+on:
+  workflow_dispatch: ~
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  build_metadata:
+    uses: nodis-com-br/gha-workflows/.github/workflows/build_metadata.yaml@master
+  publish_artifact:
+    uses: nodis-com-br/gha-workflows/.github/workflows/publish_chart.yaml@master
+    needs:
+      - build_metadata
+    secrets:
+      charts_addr: ${{ secrets.CHARTS_ADDR }}
+  revert_bump:
+    uses: nodis-com-br/gha-workflows/.github/workflows/revert_bump.yaml@master
+    needs:
+      - publish_artifact
+    if: always()
+    with:
+      build_result: ${{ needs.publish_artifact.result }}

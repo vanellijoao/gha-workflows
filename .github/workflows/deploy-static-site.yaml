@@ -1,0 +1,74 @@
+name: deploy_static_site
+
+on:
+  workflow_call:
+    secrets:
+      openvpn_config:
+        description: ''
+        required: true
+      vault_addr:
+        description: ''
+        required: true
+      vault_approle_role_id:
+        description: ''
+        required: true
+      vault_approle_secret_id:
+        description: ''
+        required: true
+        
+jobs:
+  deploy_static_site:
+    runs-on: ubuntu-latest
+    if: contains('push workflow_dispatch', github.event_name) && !contains(github.event.head_commit.message, 'skip_ci')
+    env:
+      AWS_REGION: us-east-1
+    steps:
+      - run: env | sort
+      - name: Checkout repository
+        uses: actions/checkout@main
+        with:
+          ref: ${{ github.ref }}
+      - name: Load project metadata to environment variables
+        uses: nodis-com-br/gha_metadata-load@master
+      - name: Connect to VPN
+        uses: nodis-com-br/gha_openvpn@master
+        with:
+          openvpn_config: ${{ secrets.openvpn_config }}
+      - name: Import Secrets
+        uses: hashicorp/vault-action@v2.3.0
+        with:
+          url: ${{ secrets.vault_addr }}
+          method: approle
+          roleId: ${{ secrets.vault_approle_role_id }}
+          secretId: ${{ secrets.vault_approle_secret_id }}
+          secrets: |
+            aws/sts/${{ env.NODIS_VAULT_ROLE }} access_key | AWS_ACCESS_KEY_ID;
+            aws/sts/${{ env.NODIS_VAULT_ROLE }} secret_key | AWS_SECRET_ACCESS_KEY;
+            aws/sts/${{ env.NODIS_VAULT_ROLE }} security_token | AWS_SESSION_TOKEN;
+      - name: Download artifact
+        uses: dsaltares/fetch-gh-release-asset@master
+        with:
+          version: tags/v${{ env.NODIS_PROJECT_VERSION }}
+          file: ${{ env.NODIS_ARTIFACT_FILENAME }}
+          target: ./${{ env.NODIS_ARTIFACT_FILENAME }}
+          token: ${{ github.token }}
+      - name: Sync project folder
+        shell: bash
+        run: |
+          tar xzvf ${NODIS_ARTIFACT_FILENAME}
+          FOLDERS=(www ${NODIS_PROJECT_VERSION})
+          for FOLDER in ${FOLDERS[@]}; do
+            aws s3 sync --delete --acl public-read build s3://${NODIS_WEBAPP_BUCKET}/${FOLDER}
+            for CT in $(echo ${NODIS_CUSTOM_TYPES} | jq -r '.[] | [.object,."content-type"] | @csv' | sed 's/"//g'); do
+              OBJECT=$(echo ${CT} | awk -F, '{ print $1 }' )
+              CONTENT_TYPE=$(echo ${CT} | awk -F, '{ print $2 }')
+              aws s3 rm s3://${NODIS_WEBAPP_BUCKET}/${FOLDER}/${OBJECT}
+              aws s3 cp --acl public-read build/${OBJECT} s3://${NODIS_WEBAPP_BUCKET}/${FOLDER}/${OBJECT} --content-type=${CONTENT_TYPE}
+              aws s3api head-object --bucket ${NODIS_WEBAPP_BUCKET} --key ${FOLDER}/${OBJECT}
+            done
+          done
+      - name: Invalidate Cloudfront cache
+        shell: bash
+        run: |
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions --query 'DistributionList.Items[?(Origins.Items[0].Id==`s3-'${NODIS_WEBAPP_BUCKET}'`)&&(Origins.Items[0].OriginPath==`/www`)].Id' --output text)
+          aws cloudfront create-invalidation --distribution-id ${DISTRIBUTION_ID} --paths "/*"

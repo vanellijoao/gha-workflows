@@ -1,0 +1,35 @@
+name: publish_go_application
+
+on:
+  workflow_call:
+  
+jobs:
+  publish_go_application:
+    runs-on: ubuntu-latest
+    if: contains('push workflow_dispatch', github.event_name) && !contains(github.event.head_commit.message, 'skip_ci')
+    steps:
+      - run: env | sort
+      - name: Checkout repository
+        uses: actions/checkout@main
+        with:
+          ref: ${{ github.ref }}
+      - name: Load project metadata to environment variables
+        uses: nodis-com-br/gha_metadata-load@master
+      - name: Build application
+        run: docker run -v $(pwd):$(pwd) -w $(pwd) golang:${NODIS_GO_BUILD_IMAGE_TAG} go build -o ${NODIS_PROJECT_NAME} ${NODIS_GO_MAIN_FILE}
+        shell: bash
+      - name: Create SHA256SUMS file
+        run: sha256sum ${NODIS_PROJECT_NAME} > SHA256SUMS
+        shell: bash
+      - name: Upload application to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ github.token }}
+          file: ${{ env.NODIS_PROJECT_NAME }}
+          tag: v${{ env.NODIS_PROJECT_VERSION }}
+      - name: Upload SHA256SUMS to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ github.token }}
+          file: SHA256SUMS
+          tag: v${{ env.NODIS_PROJECT_VERSION }}

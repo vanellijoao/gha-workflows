@@ -1,0 +1,80 @@
+name: testing
+
+on:
+  workflow_call:
+    secrets:
+      openvpn_config:
+        description: ''
+        required: true
+      vault_addr:
+        description: ''
+        required: true
+      vault_approle_role_id:
+        description: ''
+        required: true
+      vault_approle_secret_id:
+        description: ''
+        required: true
+
+env:
+  REPORTS_FOLDER: reports
+  GO_COVERAGE_PROFILE: coverage.out
+  GO_TEST_REPORT: report.out
+  
+jobs:
+  testing:
+    runs-on: ubuntu-latest
+    if: ( !contains(github.event.head_commit.message, 'skip_ci') && (github.event_name == 'pull_request' || contains(github.event.head_commit.message, 'Merge pull request')) )
+    steps:
+      - run: env | sort
+      - name: Checkout repository
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+      - name: Load project metadata to environment variables
+        uses: nodis-com-br/gha_metadata-load@master
+      - name: Connect to VPN
+        uses: nodis-com-br/gha_openvpn@master
+        with:
+          openvpn_config: ${{ secrets.openvpn_config }}
+      - name: Import Secrets
+        uses: hashicorp/vault-action@v2.3.0
+        with:
+          url: ${{ secrets.vault_addr }}
+          method: approle
+          roleId: ${{ secrets.vault_approle_role_id }}
+          secretId: ${{ secrets.vault_approle_secret_id }}
+          secrets: secret/data/sonarcloud/integration token | SONAR_TOKEN
+      - name: Create report folder
+        run: mkdir ${{ env.REPORTS_FOLDER }}
+        shell: bash
+      - name: Run golang tests
+        if: env.NODIS_LANGUAGE == 'go'
+        uses: nodis-com-br/gha-test-golang@master
+        with:
+          reports_folder: ${{ env.REPORTS_FOLDER }}
+          coverage_profile: ${{ env.GO_COVERAGE_PROFILE }}
+          test_report: ${{ env.GO_TEST_REPORT }}
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=${{ env.NODIS_REPOSITORY_OWNER }}
+            -Dsonar.projectName=${{ env.NODIS_REPOSITORY_NAME }}
+            -Dsonar.projectKey=${{ env.NODIS_REPOSITORY_OWNER }}_${{ env.NODIS_REPOSITORY_NAME }}
+            -Dsonar.sonar.projectVersion=${{ env.NODIS_PROJECT_VERSION }}
+            -Dsonar.go.coverage.reportPaths=${{ env.REPORTS_FOLDER }}/${{ env.GO_COVERAGE_PROFILE }}
+            -Dsonar.go.tests.reportPaths=${{ env.REPORTS_FOLDER }}/${{ env.GO_TEST_REPORT }}
+            -Dsonar.python.coverage.reportPaths=""
+            -Dsonar.python.xunit.reportPath=""
+            -Dsonar.sources=.
+            -Dsonar.tests=.
+            -Dsonar.exclusions=**/*_test.go,metadata.json
+            -Dsonar.test.inclusions=**/*_test.go
+      - name: Save reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-reports
+          path: ${{ inputs.reports_folder }}

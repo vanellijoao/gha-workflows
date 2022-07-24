@@ -1,0 +1,32 @@
+name: build_metadata
+
+on:
+  workflow_call:
+
+env:
+  SKIP_BUMP: ${{ github.event_name == 'pull_request' || contains(github.event.head_commit.message, 'skip_bump') }}
+
+jobs:
+  build_metadata:
+    runs-on: ubuntu-latest
+    if: contains('push pull_request workflow_dispatch', github.event_name) && !contains(github.event.head_commit.message, 'skip_ci')
+    steps:
+      - run: env | sort
+      - name: Checkout repository
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+      - name: Configure git
+        uses: dawidd6/action-git-user-config@v1
+      - name: Build and publish metadata for project
+        uses: nodis-com-br/gha_metadata-build@master
+        with:
+          github_token: ${{ github.token }}
+          skip_bump: ${{ env.SKIP_BUMP }}
+          first_release: ${{ contains(github.event.head_commit.message, 'first_release') }}
+      - name: Push changes
+        if: env.SKIP_BUMP == 'false'
+        uses: ad-m/github-push-action@master
+        with:
+          branch: ${{ github.ref }}
+          tags: true

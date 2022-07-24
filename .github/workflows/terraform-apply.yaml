@@ -1,0 +1,66 @@
+name: terraform_apply_plan
+
+on:
+  workflow_call:
+    secrets:
+      openvpn_config:
+        description: ''
+        required: true
+      vault_addr:
+        description: ''
+        required: true
+      vault_approle_role_id:
+        description: ''
+        required: true
+      vault_approle_secret_id:
+        description: ''
+        required: true
+    inputs:
+      vault_tf_modules_key_path:
+        type: string
+        default: secret/data/ssh/tf_modules
+      vault_gcp_roleset_path:
+        type: string
+        default: gcp/terraform/roleset/terraform-states/token
+
+jobs:
+  terraform_apply_plan:
+    runs-on: ubuntu-latest
+    if: contains('push workflow_dispatch', github.event_name) && !contains(github.event.head_commit.message, 'skip_ci')
+    environment: cloud
+    env:
+      TERRAFORM_VERSION: 1.0.11
+      GOOGLE_APPLICATION_CREDENTIALS: ./credentials.json
+    steps:
+      - run: env | sort
+      - uses: actions/checkout@main
+        name: Checkout repository
+        with:
+          fetch-depth: 20
+      - name: Setup Terraform
+        uses: nodis-com-br/gha-terraform-setup@master
+        with:
+          openvpn_config: ${{ secrets.openvpn_config }}
+          vault_addr: ${{ secrets.vault_addr }}
+          vault_approle_role_id: ${{ secrets.vault_approle_role_id }}
+          vault_approle_secret_id: ${{ secrets.vault_approle_secret_id }}
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: plan
+      - name: Install Vault
+        uses: myci-actions/add-deb-repo@10
+        with:
+          repo: deb [arch=amd64] https://apt.releases.hashicorp.com focal main
+          repo-name: hashicorp
+          keys-asc: https://apt.releases.hashicorp.com/gpg
+          install: vault
+      - name: Apply Terraform plan
+        run: terraform apply plan
+        shell: bash
+        env:
+          VAULT_ADDR: ${{ secrets.vault_addr }}
+      - name: Delete artifacts
+        uses: geekyeggo/delete-artifact@v1
+        with:
+          name: plan

@@ -1,0 +1,26 @@
+name: publish-docker-image
+
+on:
+  workflow_call:
+  
+jobs:
+  publish_public_image:
+    runs-on: ubuntu-latest
+    if: contains('push workflow_dispatch', github.event_name) && !contains(github.event.head_commit.message, 'skip_ci')
+    steps:
+      - run: env | sort
+      - name: Checkout repository
+        uses: actions/checkout@main
+        with:
+          ref: ${{ github.ref }}
+      - name: Load project metadata to environment variables
+        uses: nodis-com-br/gha_metadata-load@master
+      - name: Build and push image
+        run: |
+          DOCKER_BUILD_ARGUMENTS="${DOCKER_BUILD_ARGUMENTS} --build-arg GITHUB_ACTOR=${{ github.actor }} --build-arg GITHUB_TOKEN=${{ github.token }}"
+          docker build . -t ${NODIS_DOCKER_IMAGE_NAME} ${DOCKER_BUILD_ARGUMENTS}
+          for TAG in ${NODIS_DOCKER_IMAGE_TAGS}; do
+            docker tag ${NODIS_DOCKER_IMAGE_NAME} ${NODIS_DOCKER_IMAGE_NAME}:${TAG}
+            docker push ${NODIS_DOCKER_IMAGE_NAME}:${TAG}
+          done
+        shell: bash

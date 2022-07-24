@@ -1,0 +1,43 @@
+name: deploy_workload
+
+on:
+  workflow_call:
+    secrets:
+      openvpn_config:
+        description: ''
+        required: true
+      vault_addr:
+        description: ''
+        required: true
+      vault_approle_role_id:
+        description: ''
+        required: true
+      vault_approle_secret_id:
+        description: ''
+        required: true
+
+jobs:
+  deploy_workload:
+    runs-on: ubuntu-latest
+    if: contains('push workflow_dispatch', github.event_name) && !contains(github.event.head_commit.message, 'skip_ci') && !contains(github.event.head_commit.message, 'skip_deploy')
+    steps:
+      - run: env | sort
+      - name: Configure git
+        uses: dawidd6/action-git-user-config@v1
+      - name: Load project metadata to environment variables
+        uses: nodis-com-br/gha_metadata-load@master
+      - name: Connect to VPN
+        uses: nodis-com-br/gha_openvpn@master
+        with:
+          openvpn_config: ${{ secrets.openvpn_config }}
+      - name: Import Secrets
+        uses: hashicorp/vault-action@v2.3.0
+        with:
+          url: ${{ secrets.vault_addr }}
+          method: approle
+          roleId: ${{ secrets.vault_approle_role_id }}
+          secretId: ${{ secrets.vault_approle_secret_id }}
+          secrets: kubernetes/${{ env.NODIS_KUBERNETES_CLUSTER }}/service_account/${{ env.NODIS_KUBERNETES_NAMESPACE }}/admin kube_config | KUBECONFIG_FILE_CONTENT;
+      - name: Deploy workload
+        run: kubectl set image --kubeconfig <(echo "${KUBECONFIG_FILE_CONTENT}") --namespace ${NODIS_KUBERNETES_NAMESPACE} ${NODIS_KUBERNETES_WORKLOAD_TYPE}/${NODIS_KUBERNETES_WORKLOAD_NAME} ${NODIS_KUBERNETES_WORKLOAD_NAME}=${NODIS_DOCKER_IMAGE_NAME}:${NODIS_PROJECT_VERSION}
+        shell: bash

@@ -1,0 +1,41 @@
+name: revert_bump
+
+on:
+  workflow_call:
+    inputs:
+      build_result:
+        description: ''
+        required: true
+        type: string
+        
+jobs:
+  revert_bump:
+    runs-on: ubuntu-latest
+    if: contains('push workflow_dispatch', github.event_name) && contains('failure cancelled', inputs.build_result) && !contains(github.event.head_commit.message, 'skip_bump')
+    steps:
+      - run: env | sort
+      - name: Checkout repository
+        uses: actions/checkout@main
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+      - name: Configure git
+        uses: dawidd6/action-git-user-config@v1
+      - name: Load project metadata to environment variables
+        uses: nodis-com-br/gha_metadata-load@master
+      - name: Remove last commit
+        run: git reset --hard HEAD^
+        shell: bash
+        if: env.NODIS_SKIP_BUMP == 'false'
+      - uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          tag_name: v${{ env.NODIS_PROJECT_VERSION}}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        if: env.NODIS_SKIP_BUMP == 'false'
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          branch: ${{ github.ref }}
+          force: true
+        if: env.NODIS_SKIP_BUMP == 'false'
