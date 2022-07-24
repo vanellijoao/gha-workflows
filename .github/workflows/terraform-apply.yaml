@@ -1,4 +1,4 @@
-name: terraform_apply_plan
+name: terraform_apply
 
 on:
   workflow_call:
@@ -24,10 +24,10 @@ on:
         default: gcp/terraform/roleset/terraform-states/token
 
 jobs:
-  terraform_apply_plan:
+  terraform_apply:
     runs-on: ubuntu-latest
     if: contains('push workflow_dispatch', github.event_name) && !contains(github.event.head_commit.message, 'skip_ci')
-    environment: cloud
+    environment: terraform
     env:
       TERRAFORM_VERSION: 1.0.11
       GOOGLE_APPLICATION_CREDENTIALS: ./credentials.json

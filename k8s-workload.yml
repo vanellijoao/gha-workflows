@@ -1,4 +1,4 @@
-name: k8s-workload.yml
+name: k8s-workload
 
 on:
   workflow_dispatch: ~
@@ -12,23 +12,23 @@ on:
       - main
 
 jobs:
-  build_metadata:
-    uses: nodis-com-br/gha-workflows/.github/workflows/build_metadata.yaml@master
+  get_metadata:
+    uses: nodis-com-br/gha-workflows/.github/workflows/get-metadata.yaml@master
   test_code:
     uses: nodis-com-br/gha-workflows/.github/workflows/testing.yaml@master
     needs:
-      - build_metadata
+      - get_metadata
     secrets:
       openvpn_config: ${{ secrets.OPENVPN_CONFIG }}
       vault_addr: ${{ secrets.VAULT_ADDR }}
       vault_approle_role_id: ${{ secrets.VAULT_APPROLE_ROLE_ID }}
       vault_approle_secret_id: ${{ secrets.VAULT_APPROLE_SECRET_ID }}
   publish_artifact:
-    uses: nodis-com-br/gha-workflows/.github/workflows/publish_private_image.yaml@master
+    uses: nodis-com-br/gha-workflows/.github/workflows/publish-docker-image.yaml@master
     needs:
-      - build_metadata
+      - get_metadata
   deploy_artifact:
-    uses: nodis-com-br/gha-workflows/.github/workflows/deploy_workload.yaml@master
+    uses: nodis-com-br/gha-workflows/.github/workflows/deploy-k8s-workload.yaml@master
     needs:
       - publish_artifact
     secrets:
@@ -37,7 +37,7 @@ jobs:
       vault_approle_role_id: ${{ secrets.VAULT_APPROLE_ROLE_ID }}
       vault_approle_secret_id: ${{ secrets.VAULT_APPROLE_SECRET_ID }}
   revert_bump:
-    uses: nodis-com-br/gha-workflows/.github/workflows/revert_bump.yaml@master
+    uses: nodis-com-br/gha-workflows/.github/workflows/revert-bump.yaml@master
     needs:
       - publish_artifact
     if: always()

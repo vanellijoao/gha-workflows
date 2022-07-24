@@ -1,4 +1,4 @@
-name: terraform_plan
+name: terraform
 
 on:
   workflow_dispatch: ~
@@ -8,18 +8,18 @@ on:
       - main
 
 jobs:
-  terraform_build_plan:
-    uses: nodis-com-br/gha_workflow-jobs/.github/workflows/terraform_build_plan.yaml@master
+  terraform_plan:
+    uses: nodis-com-br/gha-workflows/.github/workflows/terraform-plan.yaml@master
     secrets:
       openvpn_config: ${{ secrets.OPENVPN_CONFIG }}
       vault_addr: ${{ secrets.VAULT_ADDR }}
       vault_approle_role_id: ${{ secrets.VAULT_APPROLE_ROLE_ID }}
       vault_approle_secret_id: ${{ secrets.VAULT_APPROLE_SECRET_ID }}
       vault_gcp_roleset_path: ${{ secrets.VAULT_GCP_ROLESET_PATH }}
-  terraform_apply_plan:
-    uses: nodis-com-br/gha_workflow-jobs/.github/workflows/terraform_apply_plan.yaml@master
+  terraform_apply:
+    uses: nodis-com-br/gha-workflows/.github/workflows/terraform-apply.yaml@master
     needs:
-      - terraform_build_plan
+      - terraform_plan
     secrets:
       openvpn_config: ${{ secrets.OPENVPN_CONFIG }}
       vault_addr: ${{ secrets.VAULT_ADDR }}

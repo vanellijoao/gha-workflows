@@ -15,12 +15,5 @@ jobs:
           ref: ${{ github.ref }}
       - name: Load project metadata to environment variables
         uses: nodis-com-br/gha_metadata-load@master
-      - name: Build and push image
-        run: |
-          DOCKER_BUILD_ARGUMENTS="${DOCKER_BUILD_ARGUMENTS} --build-arg GITHUB_ACTOR=${{ github.actor }} --build-arg GITHUB_TOKEN=${{ github.token }}"
-          docker build . -t ${NODIS_DOCKER_IMAGE_NAME} ${DOCKER_BUILD_ARGUMENTS}
-          for TAG in ${NODIS_DOCKER_IMAGE_TAGS}; do
-            docker tag ${NODIS_DOCKER_IMAGE_NAME} ${NODIS_DOCKER_IMAGE_NAME}:${TAG}
-            docker push ${NODIS_DOCKER_IMAGE_NAME}:${TAG}
-          done
-        shell: bash
+      - name: Build and push docker image
+        uses: nodis-com-br/gha_docker-publish-image@master
