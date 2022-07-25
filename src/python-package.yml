@@ -27,7 +27,7 @@ jobs:
     uses: nodis-com-br/gha-workflows/.github/workflows/publish-python-package.yaml@master
     needs:
       - get_metadata
-    with:
+    secrets:
       pypi_addr: ${{ secrets.PYPI_ADDR }}
   revert_bump:
     uses: nodis-com-br/gha-workflows/.github/workflows/revert-bump.yaml@master
