@@ -34,6 +34,8 @@ jobs:
     uses: nodis-com-br/gha-workflows/.github/workflows/publish-docker-image.yaml@master
     needs:
       - get_metadata
+    secrets:
+      openvpn_config: ${{ secrets.OPENVPN_CONFIG }}
   deploy_artifact:
     uses: nodis-com-br/gha-workflows/.github/workflows/deploy-k8s-workload.yaml@master
     needs:

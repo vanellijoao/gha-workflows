@@ -9,10 +9,31 @@ on:
 
 jobs:
   apply_changes:
-    uses: nodis-com-br/gha_maestro-apply-changes@master
-    with:
-      openvpn_config: ${{ secrets.OPENVPN_CONFIG }}
-      vault_addr: ${{ secrets.VAULT_ADDR }}
-      vault_approle_role_id: ${{ secrets.VAULT_APPROLE_ROLE_ID }}
-      vault_approle_secret_id: ${{ secrets.VAULT_APPROLE_SECRET_ID }}
-      pypi_addr: ${{ secrets.PYPI_ADDR }}
+    runs-on: ubuntu-latest
+    if: contains('push workflow_dispatch', github.event_name) && !contains(github.event.head_commit.message, 'skip_ci')
+    steps:
+      - run: env | sort
+      - uses: actions/checkout@main
+        name: Checkout repository
+        with:
+          fetch-depth: 20
+      - name: Connect to VPN
+        uses: nodis-com-br/gha_openvpn@master
+        with:
+          openvpn_config: ${{ secrets.OPENVPN_CONFIG }}
+      - name: Import Secrets
+        uses: hashicorp/vault-action@v2.3.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_APPROLE_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_APPROLE_SECRET_ID }}
+          exportToken: true
+          secrets: auth/token/lookup-self accessor | VAULT_ACCESSOR
+      - name: Apply changes
+        uses: nodis-com-br/gha-maestro-apply@master
+        with:
+          vault_addr: ${{ secrets.VAULT_ADDR }}
+          vault_token: ${{ env.VAULT_TOKEN }}
+          last_pushed_commit: ${{ github.event.before }}
+          pip_index_url: ${{ secrets.PYPI_ADDR }}
