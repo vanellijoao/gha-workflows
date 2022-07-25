@@ -1,4 +1,4 @@
-name: deploy_static_site
+name: deploy-static-site
 
 on:
   workflow_call:

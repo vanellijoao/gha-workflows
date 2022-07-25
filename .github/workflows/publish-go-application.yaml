@@ -1,4 +1,4 @@
-name: publish_go_application
+name: publish-go-application
 
 on:
   workflow_call:

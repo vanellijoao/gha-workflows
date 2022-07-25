@@ -1,4 +1,4 @@
-name: revert_bump
+name: revert-bump
 
 on:
   workflow_call:

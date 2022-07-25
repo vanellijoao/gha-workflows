@@ -1,4 +1,4 @@
-name: terraform_apply
+name: terraform-apply
 
 on:
   workflow_call:

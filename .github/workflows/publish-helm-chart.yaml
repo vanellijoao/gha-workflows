@@ -1,4 +1,4 @@
-name: publish_chart
+name: publish-helm-chart
 
 on:
   workflow_call:

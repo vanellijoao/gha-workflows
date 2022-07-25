@@ -1,4 +1,4 @@
-name: publish_reactjs_webapp
+name: publish-reactjs-webapp
 
 on:
   workflow_call:

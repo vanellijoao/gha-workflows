@@ -1,4 +1,4 @@
-name: build_metadata
+name: get-metadata
 
 on:
   workflow_call:

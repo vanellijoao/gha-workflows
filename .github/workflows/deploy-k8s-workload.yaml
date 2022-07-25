@@ -1,4 +1,4 @@
-name: deploy_workload
+name: deploy-k8s-workload
 
 on:
   workflow_call:

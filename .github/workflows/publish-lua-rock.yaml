@@ -1,4 +1,4 @@
-name: publish_lua_package
+name: publish-lua-rock
 
 on:
   workflow_call:
