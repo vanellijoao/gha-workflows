@@ -4,12 +4,19 @@ on:
   workflow_dispatch: ~
   push:
     branches:
+      - develop
+      - release/*
+      - hotfix/*
       - master
       - main
+      - legacy/*
   pull_request:
     branches:
+      - develop
+      - release/*
       - master
       - main
+      - legacy/*
 
 jobs:
   get_metadata:

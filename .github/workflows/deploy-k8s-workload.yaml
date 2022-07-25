@@ -41,3 +41,25 @@ jobs:
       - name: Deploy workload
         run: kubectl set image --kubeconfig <(echo "${KUBECONFIG_FILE_CONTENT}") --namespace ${NODIS_KUBERNETES_NAMESPACE} ${NODIS_KUBERNETES_WORKLOAD_TYPE}/${NODIS_KUBERNETES_WORKLOAD_NAME} ${NODIS_KUBERNETES_WORKLOAD_NAME}=${NODIS_DOCKER_IMAGE_NAME}:${NODIS_PROJECT_VERSION}
         shell: bash
+      - name: Install maestro
+        run: pip3 install maestro
+        shell: bash
+        env:
+          PIP_INDEX_URL: https://${{ env.NODIS_REPOSITORY_NAME }}:${{ github.token }}@$pypi.nodis.com.br/simple
+      - name: Update workload
+        run: |
+          MAESTRO_PARAMETERS="-y --vault-k8s-creds-type admin"
+          cd ${NODIS_MAESTRO_REPOSITORY}
+          helm repo add --force-update ${CHARTS_REPOSITORY_NAME} https://${NODIS_REPOSITORY_NAME}:${GITHUB_TOKEN}@${CHARTS_REPOSITORY_HOST}
+          RESOURCE_FILE=`find . -name ${NODIS_PROJECT_NAME}.yaml`
+          NEW_VALUES="{\"${NODIS_DEPLOY_ENVIRONMENT}\":{\"image\":{\"tag\":\"${NODIS_PROJECT_VERSION}\"}}}"
+          case `echo ${RESOURCE_FILE} | wc -w` in
+            1) maestro ${MAESTRO_PARAMETERS} edit ${RESOURCE_FILE} -v "${NEW_VALUES}"
+               git commit -a -m "Updated ${NODIS_DEPLOY_ENVIRONMENT}/${NODIS_PROJECT_NAME} image tag to ${NODIS_PROJECT_VERSION} - skip_ci" && git push;;
+            0) echo "Resource file for ${NODIS_PROJECT_NAME} not found";;
+            *) echo "Multiple resource files found: ${RESOURCE_FILE}";;
+          esac
+        shell: bash
+        env:
+          MAESTRO_PARAMETERS: "-y"
+        continue-on-error: true
