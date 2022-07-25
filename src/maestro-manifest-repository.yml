@@ -18,7 +18,7 @@ jobs:
         with:
           fetch-depth: 20
       - name: Connect to VPN
-        uses: nodis-com-br/gha_openvpn@master
+        uses: nodis-com-br/gha-openvpn@master
         with:
           openvpn_config: ${{ secrets.OPENVPN_CONFIG }}
       - name: Import Secrets
