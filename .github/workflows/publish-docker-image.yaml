@@ -2,7 +2,23 @@ name: publish-docker-image
 
 on:
   workflow_call:
-  
+    inputs:
+      container_registry:
+        description: ''
+        required: false
+        default: ghcr.io
+      container_registry_user:
+        description: ''
+        required: true
+        default: ${{ github.actor }}
+      container_registry_password:
+        description: ''
+        required: true
+        default: ${{ github.token }}
+      pip_index_url:
+        description: ''
+        required: false
+        default: https://pypi.nodis.com.br/simple
 jobs:
   publish_public_image:
     runs-on: ubuntu-latest
@@ -15,5 +31,33 @@ jobs:
           ref: ${{ github.ref }}
       - name: Load project metadata to environment variables
         uses: nodis-com-br/gha_metadata-load@master
-      - name: Build and push docker image
-        uses: nodis-com-br/gha_docker-publish-image@master
+      - name: Login to Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ inputs.container_registry }}
+          username: ${{ inputs.container_registry_user }}
+          password: ${{ inputs.container_registry_password }}
+      - name: Build and push image
+        run: |
+          if [[ ${NODIS_TARGET_BRANCH} == "refs/heads/master" ]] && [[ ${NODIS_DOCKER_BUILD_FROM_MASTER} == "false" ]]; then
+            if [[ -n ${NODIS_VALIDATED_VERSION} ]]; then
+              if docker pull ${NODIS_DOCKER_IMAGE_NAME}:${NODIS_VALIDATED_VERSION}; then
+                docker tag ${NODIS_DOCKER_IMAGE_NAME}:${NODIS_VALIDATED_VERSION} ${NODIS_DOCKER_IMAGE_NAME}:${NODIS_PROJECT_VERSION}
+                docker push ${NODIS_DOCKER_IMAGE_NAME}:${NODIS_PROJECT_VERSION}
+              else
+                echo "Error downloading container image ${NODIS_DOCKER_IMAGE_NAME}:${NODIS_VALIDATED_VERSION}!!!"
+                exit 1
+              fi
+            else
+              echo "Error: Missing NODIS_VALIDATED_VERSION environment variable!!!"
+              exit 1
+            fi
+          else
+            DOCKER_BUILD_ARGUMENTS="--build-arg GITHUB_ACTOR=${{ github.actor }} --build-arg GITHUB_TOKEN=${{ github.token }} --build-arg PIP_INDEX_URL=${{ inputs.pip_index_url }}"
+            docker build . -t ${NODIS_DOCKER_IMAGE_NAME} ${DOCKER_BUILD_ARGUMENTS}
+            for TAG in ${NODIS_DOCKER_IMAGE_TAGS}; do
+              docker tag ${NODIS_DOCKER_IMAGE_NAME} ${NODIS_DOCKER_IMAGE_NAME}:${TAG}
+              docker push ${NODIS_DOCKER_IMAGE_NAME}:${TAG}
+            done
+          fi
+        shell: bash
