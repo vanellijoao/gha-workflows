@@ -14,7 +14,7 @@ jobs:
         with:
           ref: ${{ github.ref }}
       - name: Load project metadata to environment variables
-        uses: nodis-com-br/gha_metadata-load@master
+        uses: nodis-com-br/gha-metadata-load@master
       - name: Build application
         run: docker run -v $(pwd):$(pwd) -w $(pwd) golang:${NODIS_GO_BUILD_IMAGE_TAG} go build -o ${NODIS_PROJECT_NAME} ${NODIS_GO_MAIN_FILE}
         shell: bash

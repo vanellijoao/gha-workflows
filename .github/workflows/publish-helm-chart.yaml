@@ -19,7 +19,7 @@ jobs:
         with:
           ref: ${{ github.ref }}
       - name: Load project metadata to environment variables
-        uses: nodis-com-br/gha_metadata-load@master
+        uses: nodis-com-br/gha-metadata-load@master
       - name: Add chart repository and build dependencies
         run: |
           helm repo add nodis https://${NODIS_REPOSITORY_NAME}:${{ github.token }}@${{ secrets.charts_addr }}

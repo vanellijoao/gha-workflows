@@ -30,7 +30,7 @@ jobs:
         with:
           ref: ${{ github.ref }}
       - name: Load project metadata to environment variables
-        uses: nodis-com-br/gha_metadata-load@master
+        uses: nodis-com-br/gha-metadata-load@master
       - name: Login to Container Registry
         uses: docker/login-action@v1
         with:

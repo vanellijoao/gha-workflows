@@ -18,7 +18,7 @@ jobs:
         with:
           ref: ${{ github.ref }}
       - name: Load project metadata to environment variables
-        uses: nodis-com-br/gha_metadata-load@master
+        uses: nodis-com-br/gha-metadata-load@master
       - run: pip3 install twine
         shell: bash
       - name: Build artifact

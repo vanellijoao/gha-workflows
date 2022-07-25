@@ -19,7 +19,7 @@ jobs:
       - name: Configure git
         uses: dawidd6/action-git-user-config@v1
       - name: Build and publish metadata for project
-        uses: nodis-com-br/gha_metadata-build@master
+        uses: nodis-com-br/gha-metadata-build@master
         with:
           github_token: ${{ github.token }}
           skip_bump: ${{ env.SKIP_BUMP }}
