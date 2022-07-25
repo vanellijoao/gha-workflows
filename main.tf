@@ -72,3 +72,12 @@ module "maestro_workflow" {
   owner        = local.github_owner
   email_domain = local.email_domain
 }
+
+module "terraform_workflow" {
+  source       = "git@github.com:nodis-com-br/tf_modules.git//github_repository_file"
+  topics       = ["terraform"]
+  file         = ".github/workflows/terraform-plan.yml"
+  content      = file("src/terraform-plan.yml")
+  owner        = local.github_owner
+  email_domain = local.email_domain
+}

@@ -48,9 +48,9 @@ jobs:
       - name: Create report folder
         run: mkdir ${{ env.REPORTS_FOLDER }}
         shell: bash
-      - name: Run golang tests
+      - name: Run go tests
         if: env.NODIS_LANGUAGE == 'go'
-        uses: nodis-com-br/gha-test-golang@master
+        uses: nodis-com-br/gha-go-testing@master
         with:
           reports_folder: ${{ env.REPORTS_FOLDER }}
           coverage_profile: ${{ env.GO_COVERAGE_PROFILE }}
@@ -73,8 +73,9 @@ jobs:
             -Dsonar.tests=.
             -Dsonar.exclusions=**/*_test.go,metadata.json
             -Dsonar.test.inclusions=**/*_test.go
+        continue-on-error: true
       - name: Save reports
         uses: actions/upload-artifact@v2
         with:
           name: test-reports
-          path: ${{ inputs.reports_folder }}
+          path: ${{ env.REPORTS_FOLDER }}
