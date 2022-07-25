@@ -45,7 +45,7 @@ jobs:
         run: pip3 install maestro
         shell: bash
         env:
-          PIP_INDEX_URL: https://${{ env.NODIS_REPOSITORY_NAME }}:${{ github.token }}@$pypi.nodis.com.br/simple
+          PIP_INDEX_URL: https://${{ env.NODIS_REPOSITORY_NAME }}:${{ github.token }}@pypi.nodis.com.br/simple
       - name: Update workload
         run: |
           MAESTRO_PARAMETERS="-y --vault-k8s-creds-type admin"

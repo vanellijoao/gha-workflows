@@ -4,7 +4,7 @@ terraform {
       source = "integrations/github"
     }
   }
-    backend "gcs" {
-      bucket = "nodis-terraform-github"
-    }
+  backend "gcs" {
+    bucket = "nodis-terraform-github"
+  }
 }

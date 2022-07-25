@@ -49,8 +49,8 @@ module "k8s_workload_workflow" {
 module "lua_package_workflow" {
   source       = "git@github.com:nodis-com-br/tf_modules.git//github_repository_file"
   topics       = ["kong-plugin"]
-  file         = ".github/workflows/lua-package.yml"
-  content      = file("src/lua-package.yml")
+  file         = ".github/workflows/lua-package.yaml"
+  content      = file("src/lua-package.yaml")
   owner        = local.github_owner
   email_domain = local.email_domain
 }
@@ -60,6 +60,15 @@ module "python_package_workflow" {
   topics       = ["python package", "python library"]
   file         = ".github/workflows/python-package.yml"
   content      = file("src/python-package.yml")
+  owner        = local.github_owner
+  email_domain = local.email_domain
+}
+
+module "maestro_workflow" {
+  source       = "git@github.com:nodis-com-br/tf_modules.git//github_repository_file"
+  topics       = ["maestro configuration"]
+  file         = ".github/workflows/maestro-manifest-repository.yml"
+  content      = file("src/maestro-manifest-repository.yml")
   owner        = local.github_owner
   email_domain = local.email_domain
 }
