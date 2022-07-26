@@ -7,7 +7,7 @@ env:
   SKIP_BUMP: ${{ github.event_name == 'pull_request' || contains(github.event.head_commit.message, 'skip_bump') }}
 
 jobs:
-  build_metadata:
+  get_metadata:
     runs-on: ubuntu-latest
     if: contains('push pull_request workflow_dispatch', github.event_name) && !contains(github.event.head_commit.message, 'skip_ci')
     steps:

@@ -24,11 +24,13 @@ jobs:
       vault_approle_role_id: ${{ secrets.VAULT_APPROLE_ROLE_ID }}
       vault_approle_secret_id: ${{ secrets.VAULT_APPROLE_SECRET_ID }}
   build_artifact:
-    uses: nodis-com-br/gha_workflow-jobs/.github/workflows/publish-reactjs-app.yaml@master
+    uses: nodis-com-br/gha-workflows/.github/workflows/publish-reactjs-app.yaml@master
+    with:
+      nodejs_version: '16.10.0'
     needs:
       - get_metadata
   deploy_artifact:
-    uses: nodis-com-br/gha_workflow-jobs/.github/workflows/deploy-static-site.yaml@master
+    uses: nodis-com-br/gha-workflows/.github/workflows/deploy-static-site.yaml@master
     needs:
       - build_artifact
     secrets:

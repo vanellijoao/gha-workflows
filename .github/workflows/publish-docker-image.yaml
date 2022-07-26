@@ -6,6 +6,9 @@ on:
       openvpn_config:
         description: ''
         required: true
+      gh_packages_token:
+        description: ''
+        required: true
     inputs:
       pip_index_url:
         type: string
@@ -50,7 +53,7 @@ jobs:
               exit 1
             fi
           else
-            docker build . -t ${NODIS_DOCKER_IMAGE_NAME} --build-arg GITHUB_ACTOR=${{ github.actor }} --build-arg GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} --build-arg PIP_INDEX_URL=${{ inputs.pip_index_url }}
+            docker build . -t ${NODIS_DOCKER_IMAGE_NAME} --build-arg GITHUB_ACTOR=${{ github.actor }} --build-arg GITHUB_TOKEN=${{ secrets.GH_ACCESS_TOKEN }} --build-arg PIP_INDEX_URL=${{ inputs.pip_index_url }}
             for TAG in ${NODIS_DOCKER_IMAGE_TAGS}; do
               docker tag ${NODIS_DOCKER_IMAGE_NAME} ${NODIS_DOCKER_IMAGE_NAME}:${TAG}
               docker push ${NODIS_DOCKER_IMAGE_NAME}:${TAG}

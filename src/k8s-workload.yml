@@ -36,6 +36,7 @@ jobs:
       - get_metadata
     secrets:
       openvpn_config: ${{ secrets.OPENVPN_CONFIG }}
+      gh_packages_token: ${{ secrets.GH_PACKAGES_TOKEN }}
   deploy_artifact:
     uses: nodis-com-br/gha-workflows/.github/workflows/deploy-k8s-workload.yaml@master
     needs:

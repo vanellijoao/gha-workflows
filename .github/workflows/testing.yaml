@@ -20,6 +20,9 @@ env:
   REPORTS_FOLDER: reports
   GO_COVERAGE_PROFILE: coverage.out
   GO_TEST_REPORT: report.out
+  PYTHON_COVERAGE_REPORT: "*coverage-*.xml"
+  PYTHON_XUNIT_REPORT: xunit-result-*.xml
+  JAVASCRIPT_LCOV_INFO: lcov.info
   
 jobs:
   testing:
@@ -67,8 +70,9 @@ jobs:
             -Dsonar.sonar.projectVersion=${{ env.NODIS_PROJECT_VERSION }}
             -Dsonar.go.coverage.reportPaths=${{ env.REPORTS_FOLDER }}/${{ env.GO_COVERAGE_PROFILE }}
             -Dsonar.go.tests.reportPaths=${{ env.REPORTS_FOLDER }}/${{ env.GO_TEST_REPORT }}
-            -Dsonar.python.coverage.reportPaths=""
-            -Dsonar.python.xunit.reportPath=""
+            -Dsonar.python.coverage.reportPaths=${{ env.REPORTS_FOLDER }}/${{ env.PYTHON_COVERAGE_REPORT }}
+            -Dsonar.python.xunit.reportPath=${{ env.REPORTS_FOLDER }}/${{ env.PYTHON_XUNIT_REPORT }}
+            -Dsonar.javascript.lcov.reportPaths=${{ env.REPORTS_FOLDER }}/${{ env.JAVASCRIPT_LCOV_INFO }}
             -Dsonar.sources=.
             -Dsonar.tests=.
             -Dsonar.exclusions=**/*_test.go,metadata.json
