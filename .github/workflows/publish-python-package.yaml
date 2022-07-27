@@ -36,4 +36,4 @@ jobs:
         env:
           TWINE_USERNAME: ${{ env.NODIS_REPOSITORY_NAME }}
           TWINE_PASSWORD: ${{ github.token }}
-          TWINE_REPOSITORY_URL: https://${{ secrets.pypi_addr }}/simple
+          TWINE_REPOSITORY_URL: ${{ secrets.pypi_addr }}
