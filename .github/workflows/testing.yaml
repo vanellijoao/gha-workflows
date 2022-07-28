@@ -75,7 +75,7 @@ jobs:
             -Dsonar.javascript.lcov.reportPaths=${{ env.REPORTS_FOLDER }}/${{ env.JAVASCRIPT_LCOV_INFO }}
             -Dsonar.sources=.
             -Dsonar.tests=.
-            -Dsonar.exclusions=**/*_test.go,metadata.json
+            -Dsonar.exclusions=metadata.json,demo/**
             -Dsonar.test.inclusions=**/*_test.go
         continue-on-error: true
       - name: Save reports
