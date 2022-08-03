@@ -10,7 +10,6 @@ on:
     branches:
       - master
       - main
-      -
       
 jobs:
   get_metadata:
@@ -22,7 +21,7 @@ jobs:
     secrets:
       charts_addr: ${{ secrets.CHARTS_ADDR }}
   revert_bump:
-    uses: nodis-com-br/gha-workflows/.github/workflows/revert_bump.yaml@master
+    uses: nodis-com-br/gha-workflows/.github/workflows/revert-bump.yaml@master
     needs:
       - publish_artifact
     if: always()
